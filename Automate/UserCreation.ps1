@@ -7,19 +7,17 @@
 #
 #  1. Connect to Exchange Server 
 #  2. Read in CSV 
-#  3. Create AD-User)
-#  4. Copy UserGroup from Standard LocationUser 
+#  3. Create AD-User from CSV-Object
+#  4. Copy UserGroup from Standard LocationUser to ADUser
+#  5. Add AD-User to O365 User Group
 #  5. Log into TXT file
-#  6. Send approval mail to Support@steiner.ch ( TODO)
+#  6. Send approval mail to Support@steiner.ch (TODO)
  
- # Set-ExecutionPolicy Unrestricted
+# Set-ExecutionPolicy Unrestricted
 
 Set-ExecutionPolicy Unrestricted
 
 # install Module to current powershell 
-
-Install-Module exchangeonlinemanagement
-
 
 import-module ActiveDirectory
 
@@ -83,32 +81,45 @@ $NewUserCsv = Import-Csv C:\Temp\NewUser_Mailbox.csv -Header 'Fullname', 'FirstN
                       
             }
     
-            default { Write-Host "Bitte Wählen eine gültige Lokation"}
+            default { Write-Host "Bitte Wähle eine gültige Lokation"}
            }
 
             #Create AD User
-            New-ADUser -Name $Flname -Accountpassword (Read-Host -AsSecureString "Steiner2022") -FirstName $Fname -LastName $Lname -Alias $Kuerzel -SamAccountName $Kuerzel -Path $path -Enabled $true
+             New-ADUser -Name $Flname -Accountpassword (Read-Host -AsSecureString "Steiner2022") -FirstName $Fname -LastName $Lname -Alias $Kuerzel -SamAccountName $Kuerzel -Path $path -Enabled $true
 
-            # Copy AD-Groups from Standarduser to NewUser:
+            #Copy AD-Groups from StandardUser to NewUser:
 
             $usertoaddtogroup = Get-ADUser -Identity $Kuerzel
 
             $getusergroups = Get-ADUser –Identity $standartuser -Properties memberof | Select-Object -ExpandProperty memberof
             $getusergroups | Add-ADGroupMember -Members $usertoaddtogroup -verbose
 
-            # Add User to O365-LicenceGroup
+            
+            #Connect Mailbox to new User 
+             Enable-Mailbox -Identity $Kuerzel -Database "MXDB001"
+            
+            #Add User to O365-LicGroup
+             Add-ADGroupMember -Identity LIC-Office-365-E3-EAS -Members $Kuerzel
 
-            Add-ADGroupMember -Identity LIC-Office-365-E3-EAS -Members $Kuerzel
-
-            Write-Host "----------- $FLname HAS BEEN SUCCESFULLY CREATED AND ADDED TO THE GROUPS--------------"
+           
+             Write-Host "----------- $FLname HAS BEEN SUCCESFULLY CREATED AND ADDED TO THE GROUPS--------------"
             
             #Log file 
 
             $Logfile = "C:\Temps\log.txt"
+            $Migrationlog = "C:\Temps\MigrationLog"+(Get-Date -Format HH:mm)+".txt"
             $CurrentTime = Get-Date -Format "dddd MM/dd/yyyy HH:mm K"
 
             Write-Host " $FLname : $Kuerzel : $OU : $Location : $Email : $CurrentTime" | Out-File -FilePath $Logfile -Append
 
+            #Connect to Exchange Online
+            Connect-ExchangeOnline
+
+            #Migrate User to Exchange Online
+            New-MoveRequest -Identity $Email -Remote -RemoteHostName "webmail.steiner.ch" -TargetDeliveryDomain "steiner.ch" -RemoteCredential (Get-Credential steiner\karm)
+
+            #Move Request Status
+            Get-MoveRequest -Identity $Email | Get-MoveRequestStatistics > $Migrationlog -Append
 
          
     }else{
