@@ -10,8 +10,8 @@
 #  3. Create AD-User from CSV-Object
 #  4. Copy UserGroup from Standard LocationUser to ADUser
 #  5. Add AD-User to O365 User Group
-#  5. Log into TXT file
-#  6. Send approval mail to Support@steiner.ch (TODO)
+#  5. Enable Mailbox & Start Migration
+#  6. Log into TXT file
  
 # Set-ExecutionPolicy Unrestricted
 
@@ -19,7 +19,7 @@ Set-ExecutionPolicy Unrestricted
 
 # install Module to current powershell 
 
-import-module ActiveDirectory
+Import-Module ActiveDirectory
 
 # ConnectToOnPremExchange
 
@@ -100,17 +100,17 @@ $NewUserCsv = Import-Csv C:\Temp\NewUser_Mailbox.csv -Header 'Fullname', 'FirstN
             
             #Add User to O365-LicGroup
              Add-ADGroupMember -Identity LIC-Office-365-E3-EAS -Members $Kuerzel
-
-           
+                       
              Write-Host "----------- $FLname HAS BEEN SUCCESFULLY CREATED AND ADDED TO THE GROUPS--------------"
             
             #Log file 
 
-            $Logfile = "C:\Temps\log.txt"
-            $Migrationlog = "C:\Temps\MigrationLog"+(Get-Date -Format HH:mm)+".txt"
+            $Logfile = "C:\Temps\log_" + (Get-Date -Format HH:mm:ss) + ".txt"
+            $Migrationlog = "C:\Temps\MigrationLog_" + (Get-Date -Format HH:mm) + ".txt"
             $CurrentTime = Get-Date -Format "dddd MM/dd/yyyy HH:mm K"
 
             Write-Host " $FLname : $Kuerzel : $OU : $Location : $Email : $CurrentTime" | Out-File -FilePath $Logfile -Append
+
 
             #Connect to Exchange Online
             Connect-ExchangeOnline
@@ -120,8 +120,7 @@ $NewUserCsv = Import-Csv C:\Temp\NewUser_Mailbox.csv -Header 'Fullname', 'FirstN
 
             #Move Request Status
             Get-MoveRequest -Identity $Email | Get-MoveRequestStatistics > $Migrationlog -Append
-
-         
+                                 
     }else{
 
             Write-Host "USER ALREADY EXiSTS SKIP TO NEXT IN ROW..."
