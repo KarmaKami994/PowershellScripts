@@ -4,7 +4,7 @@ Powershell Scripts to Automate everday Tasks
 
 # UserCreation.ps
 
-TYPE OF ENVIRONMENT : HYBRED 
+TYPE OF ENVIRONMENT : HYBRID 
 
 - Creates Users directly from a CSV File ( if user exists it skips to next in row)
 - Adds new created Users to the same Groups as (Default Location User)
