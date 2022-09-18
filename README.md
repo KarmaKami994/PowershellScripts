@@ -2,7 +2,7 @@
 Powershell Scripts to Automate everday Tasks
 
 
-#UserCreation.ps
+# UserCreation.ps
 
 TYPE OF ENVIRONMENT : HYBRED 
 
