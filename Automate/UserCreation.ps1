@@ -81,7 +81,7 @@ $NewUserCsv = Import-Csv C:\Temp\NewUser_Mailbox.csv -Header 'Fullname', 'FirstN
                       
             }
     
-            default { Write-Host "Bitte Wähle eine gültige Lokation"}
+            default { Write-Host "Choose a valid Location"}
            }
 
             #Create AD User
